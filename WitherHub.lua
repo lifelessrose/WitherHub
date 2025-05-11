@@ -6,7 +6,7 @@ local MarketplaceService = game:GetService("MarketplaceService")
 local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/shlexware/Rayfield/main/source"))()
 
 local Window = Library:CreateWindow({
-    Name = "GameHub",
+    Name = "WitherHub",
     Theme = Library.Themes.Dark,
     Size = UDim2.new(0, 500, 0, 350),
 })
