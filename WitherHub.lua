@@ -1,8 +1,11 @@
+-- Credits
+-- This script was created and maintained by lifelessrose.
+
 local Players = game:GetService("Players")
 local Player = Players.LocalPlayer
 local Workspace = game:GetService("Workspace")
-local MarketplaceService = game:GetService("MarketplaceService")
 local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
 
 print("Script started")
 print("Player initialized: ", Player)
@@ -21,7 +24,7 @@ print("Library loaded successfully")
 local Window = Library:CreateWindow({
     Name = "WitherHub",
     Theme = Library.Themes.Dark,
-    Size = UDim2.new(0, 500, 0, 350),
+    Size = UDim2.new(0, 500, 0, 400),
 })
 
 if not Window then
@@ -34,7 +37,7 @@ print("UI Window created successfully")
 local Tab = Window:CreateTab("Exploits")
 local Category = Tab:CreateCategory("Game Exploits")
 
-local ESPButton = Category:CreateButton({
+Category:CreateButton({
     Name = "Enable ESP",
     Callback = function()
         print("ESP Button clicked")
@@ -62,47 +65,71 @@ local ESPButton = Category:CreateButton({
     end
 })
 
-local TeleportButton = Category:CreateButton({
-    Name = "Enable Teleport",
-    Callback = function()
-        print("Teleport Button clicked")
-        local TeleportFolder = Instance.new("Folder")
-        TeleportFolder.Name = "Teleports"
-        TeleportFolder.Parent = Workspace
+Category:CreateSlider({
+    Name = "Walkspeed Modifier",
+    Min = 16,
+    Max = 200,
+    Default = 16,
+    Callback = function(value)
+        if Player.Character and Player.Character:FindFirstChild("Humanoid") then
+            Player.Character.Humanoid.WalkSpeed = value
+        end
+    end
+})
 
-        for _, player in pairs(Players:GetPlayers()) do
-            if player ~= Player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-                local teleport = Instance.new("Part")
-                teleport.Anchored = true
-                teleport.CanCollide = false
-                teleport.Transparency = 0.5
-                teleport.Size = Vector3.new(5, 5, 5)
-                teleport.BrickColor = BrickColor.new("Red")
-                teleport.Parent = TeleportFolder
+Category:CreateSlider({
+    Name = "Gravity Modifier",
+    Min = 10,
+    Max = 500,
+    Default = Workspace.Gravity,
+    Callback = function(value)
+        Workspace.Gravity = value
+    end
+})
 
-                local clickDetector = Instance.new("ClickDetector")
-                clickDetector.Parent = teleport
-                clickDetector.MouseClick:Connect(function()
-                    if Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") then
-                        Player.Character.HumanoidRootPart.CFrame = teleport.CFrame
+local noclipEnabled = false
+Category:CreateToggle({
+    Name = "Enable Noclip",
+    Default = false,
+    Callback = function(state)
+        noclipEnabled = state
+        RunService.Stepped:Connect(function()
+            if noclipEnabled and Player.Character then
+                for _, part in pairs(Player.Character:GetDescendants()) do
+                    if part:IsA("BasePart") then
+                        part.CanCollide = false
                     end
-                end)
+                end
+            end
+        end)
+    end
+})
 
-                teleport.CFrame = player.Character.HumanoidRootPart.CFrame
+Category:CreateToggle({
+    Name = "Enable God Mode",
+    Default = false,
+    Callback = function(state)
+        if state then
+            if Player.Character and Player.Character:FindFirstChild("Humanoid") then
+                Player.Character.Humanoid.MaxHealth = math.huge
+                Player.Character.Humanoid.Health = math.huge
+            end
+        else
+            if Player.Character and Player.Character:FindFirstChild("Humanoid") then
+                Player.Character.Humanoid.MaxHealth = 100
+                Player.Character.Humanoid.Health = 100
             end
         end
     end
 })
 
-local InfiniteJumpButton = Category:CreateButton({
-    Name = "Enable Infinite Jump",
+Category:CreateButton({
+    Name = "Kill All Players",
     Callback = function()
-        print("Infinite Jump Button clicked")
-        UserInputService.JumpRequest:Connect(function()
-            if Player.Character and Player.Character:FindFirstChild("Humanoid") then
-                Player.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+        for _, player in pairs(Players:GetPlayers()) do
+            if player ~= Player and player.Character and player.Character:FindFirstChild("Humanoid") then
+                player.Character.Humanoid.Health = 0
             end
-        end)
+        end
     end
-_
-
+})
