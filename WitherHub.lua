@@ -1,135 +1,72 @@
--- Credits
--- This script was created and maintained by lifelessrose.
+--[[
+    ===================================================
+    WitherHub Script
+    Created by: lifelessrose & King_sweets2004
+    Owner: King_sweets2004
+    Contributors: lifelessrose
+    ===================================================
+]]
 
+-- Services
 local Players = game:GetService("Players")
 local Player = Players.LocalPlayer
 local Workspace = game:GetService("Workspace")
-local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
 
-print("Script started")
-print("Player initialized: ", Player)
+-- Whitelist and Owner
+local whitelistedPlayers = { "King_sweets2004", "AnotherUsername" }
+local scriptOwner = "King_sweets2004"
 
-local success, Library = pcall(function()
-    return loadstring(game:HttpGet("https://raw.githubusercontent.com/shlexware/Rayfield/main/source"))()
+-- Check Whitelist
+local function isWhitelisted(playerName)
+    for _, name in ipairs(whitelistedPlayers) do
+        if name == playerName then
+            return true
+        end
+    end
+    return false
+end
+
+-- Nametag Creation Function
+local function createNametag(character, tagText, tagColor)
+    if character:FindFirstChild("Head") then
+        local head = character:FindFirstChild("Head")
+        if not head:FindFirstChild("WitherHubNametag") then
+            local billboard = Instance.new("BillboardGui")
+            billboard.Name = "WitherHubNametag"
+            billboard.Size = UDim2.new(0, 200, 0, 50)
+            billboard.StudsOffset = Vector3.new(0, 2, 0)
+            billboard.AlwaysOnTop = true
+            billboard.Parent = head
+
+            local label = Instance.new("TextLabel")
+            label.Size = UDim2.new(1, 0, 1, 0)
+            label.BackgroundTransparency = 1
+            label.Text = tagText
+            label.TextColor3 = tagColor
+            label.TextScaled = true
+            label.Font = Enum.Font.SourceSansBold
+            label.Parent = billboard
+        end
+    end
+end
+
+-- Add Nametag to Owner or Users
+Players.PlayerAdded:Connect(function(player)
+    player.CharacterAdded:Connect(function(character)
+        if player.Name == scriptOwner then
+            createNametag(character, "WitherHub Owner", Color3.new(1, 0.8, 0)) -- Gold color for owner
+        elseif isWhitelisted(player.Name) then
+            createNametag(character, "WitherHub User", Color3.new(0, 1, 0)) -- Green color for users
+        end
+    end)
 end)
 
-if not success or not Library then
-    warn("Failed to load library. Check the URL or your internet connection.")
-    return
+-- Initial Check for Current Player
+if Player.Name == scriptOwner then
+    createNametag(Player.Character or Player.CharacterAdded:Wait(), "WitherHub Owner", Color3.new(1, 0.8, 0))
+elseif not isWhitelisted(Player.Name) then
+    Player:Kick("You are not whitelisted for WitherHub.")
+else
+    createNametag(Player.Character or Player.CharacterAdded:Wait(), "WitherHub User", Color3.new(0, 1, 0))
 end
-
-print("Library loaded successfully")
-
-local Window = Library:CreateWindow({
-    Name = "WitherHub",
-    Theme = Library.Themes.Dark,
-    Size = UDim2.new(0, 500, 0, 400),
-})
-
-if not Window then
-    warn("Failed to create UI Window. Ensure the library is working properly.")
-    return
-end
-
-print("UI Window created successfully")
-
-local Tab = Window:CreateTab("Exploits")
-local Category = Tab:CreateCategory("Game Exploits")
-
-Category:CreateButton({
-    Name = "Enable ESP",
-    Callback = function()
-        print("ESP Button clicked")
-        local ESP = Instance.new("Folder")
-        ESP.Name = "ESP"
-        ESP.Parent = Workspace
-
-        for _, player in pairs(Players:GetPlayers()) do
-            if player ~= Player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-                local esp = Instance.new("BillboardGui")
-                esp.AlwaysOnTop = true
-                esp.Size = UDim2.new(0, 200, 0, 50)
-                esp.Parent = ESP
-
-                local label = Instance.new("TextLabel")
-                label.Text = player.Name
-                label.Size = UDim2.new(0, 200, 0, 50)
-                label.BackgroundTransparency = 1
-                label.TextColor3 = Color3.new(1, 0, 0)
-                label.Parent = esp
-
-                esp.Adornee = player.Character:FindFirstChild("HumanoidRootPart")
-            end
-        end
-    end
-})
-
-Category:CreateSlider({
-    Name = "Walkspeed Modifier",
-    Min = 16,
-    Max = 200,
-    Default = 16,
-    Callback = function(value)
-        if Player.Character and Player.Character:FindFirstChild("Humanoid") then
-            Player.Character.Humanoid.WalkSpeed = value
-        end
-    end
-})
-
-Category:CreateSlider({
-    Name = "Gravity Modifier",
-    Min = 10,
-    Max = 500,
-    Default = Workspace.Gravity,
-    Callback = function(value)
-        Workspace.Gravity = value
-    end
-})
-
-local noclipEnabled = false
-Category:CreateToggle({
-    Name = "Enable Noclip",
-    Default = false,
-    Callback = function(state)
-        noclipEnabled = state
-        RunService.Stepped:Connect(function()
-            if noclipEnabled and Player.Character then
-                for _, part in pairs(Player.Character:GetDescendants()) do
-                    if part:IsA("BasePart") then
-                        part.CanCollide = false
-                    end
-                end
-            end
-        end)
-    end
-})
-
-Category:CreateToggle({
-    Name = "Enable God Mode",
-    Default = false,
-    Callback = function(state)
-        if state then
-            if Player.Character and Player.Character:FindFirstChild("Humanoid") then
-                Player.Character.Humanoid.MaxHealth = math.huge
-                Player.Character.Humanoid.Health = math.huge
-            end
-        else
-            if Player.Character and Player.Character:FindFirstChild("Humanoid") then
-                Player.Character.Humanoid.MaxHealth = 100
-                Player.Character.Humanoid.Health = 100
-            end
-        end
-    end
-})
-
-Category:CreateButton({
-    Name = "Kill All Players",
-    Callback = function()
-        for _, player in pairs(Players:GetPlayers()) do
-            if player ~= Player and player.Character and player.Character:FindFirstChild("Humanoid") then
-                player.Character.Humanoid.Health = 0
-            end
-        end
-    end
-})
